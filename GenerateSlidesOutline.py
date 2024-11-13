@@ -10,8 +10,6 @@ from pptx.util import Inches
 # 导入 OpenAI API
 from openai import OpenAI
 
-os.environ["OPENAI_API_KEY"] = ""
-
 # Define file paths
 pdf_file_name = "data/Example.pdf"  # replace with your PDF path
 local_md_dir = "output"
