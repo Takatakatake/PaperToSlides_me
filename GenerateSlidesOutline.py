@@ -90,26 +90,49 @@ print(formatted_outline)
 # Function to create a PowerPoint presentation from the outline
 def create_ppt_from_outline(outline):
     prs = pptx.Presentation()
-    slides = outline.split("\n---\n")
+    slides = outline.split('---')
+
+    # Keep track of the image number
+    image_counter = 0
 
     for slide in slides:
-        lines = slide.split("\n")
-        slide_title = lines[0].replace("**", "").strip()
+        lines = slide.strip().split('\n')
+        if not lines:
+            continue
+
+        slide_title = lines[0].replace('**', '').strip()
         slide_content = lines[1:]
 
-        slide_layout = prs.slide_layouts[1]  # Use the title and content layout
+        slide_layout = prs.slide_layouts[1]  # Title and content layout
         slide = prs.slides.add_slide(slide_layout)
         title = slide.shapes.title
         title.text = slide_title
 
         content = slide.placeholders[1].text_frame
         for line in slide_content:
-            if line.strip():
-                p = content.add_paragraph()
-                p.text = line.strip()
-                p.level = 0
+            line = line.strip()
+            # Remove leading '- ' if present
+            if line.startswith('- '):
+                line = line[2:]
+            if line:
+                if '[Image' in line:
+                    # Extract image number from the line
+                    match = re.search(r'\[Image (\d+)\]', line)
+                    if match:
+                        image_number = int(match.group(1)) - 1
+                        if image_number < len(image_paths):
+                            image_path = os.path.join('output', pdf_base_name, 'auto', image_paths[image_number])
+                            # Insert image below the text content
+                            left = Inches(1)
+                            top = Inches(2.5)
+                            height = Inches(4)
+                            slide.shapes.add_picture(image_path, left, top, height=height)
+                else:
+                    p = content.add_paragraph()
+                    p.text = line
+                    p.level = 0
 
-    prs.save("Generated_Slides.pptx")
+    prs.save('Generated_Slides.pptx')
 
 # Create the PowerPoint presentation
 create_ppt_from_outline(formatted_outline)

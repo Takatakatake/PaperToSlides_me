@@ -1,5 +1,5 @@
 # Instructions:
-Please generate an outline for a PowerPoint presentation. Each slide should be separated by "---". You can reference your image input in the format "image_n" (n represent the number of image inputs)
+Please generate an outline for a PowerPoint presentation. Each slide should be separated by "---". You can reference your image input in the format "[Image n]" where n represents the number of image inputs.
 
 # Example Outline:
 
@@ -26,8 +26,8 @@ Slide 5: Solutions
 - Benefits of the solutions
 ---
 Slide 6: Case Studies
-- image_1
-- image_2
+- [Image 1]
+- [Image 2]
 ---
 Slide 7: Future Outlook
 - Predictions
