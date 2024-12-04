@@ -10,6 +10,8 @@ from pptx.util import Inches
 # 导入 OpenAI API
 from openai import OpenAI
 
+os.environ["OPENAI_API_KEY"] = "your_openai_api_key_here"
+
 # Define file paths
 pdf_file_name = "data/Example.pdf"  # replace with your PDF path
 local_md_dir = "output"
@@ -73,7 +75,7 @@ messages = [
     }
 ]
 
-# 使用 GPT-o1 生成 PPT 大纲
+# 使用 GPT-4o 生成 PPT 大纲
 response = client.chat.completions.create(
     model="gpt-4o",
     messages=messages,
