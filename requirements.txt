@@ -10,4 +10,9 @@ scikit-learn>=1.0.2
 torch>=2.2.2
 transformers
 pdfminer.six==20231228
-# The requirements.txt must ensure that only necessary external dependencies are introduced. If there are new dependencies to add, please contact the project administrator.
+
+# For PaperToSlides
+openai>=1.0.0
+python-pptx>=0.6.21
+pyyaml>=6.0
+magic-pdf[full]
