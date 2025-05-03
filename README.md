@@ -2,6 +2,15 @@
 
 🚀 **PaperToSlides** is an AI-driven tool designed to automatically convert academic papers in PDF format into polished presentation slides—perfect for research group meetings, conference rehearsals, and quick paper summaries.
 
+## Updates on 2025-05-03
+1. Completely refactored the `extract_pdf_to_markdown` function using the new MinerU API to enhance PDF parsing performance.
+
+2. Added a conditional check to skip PDF parsing if the corresponding Markdown file already exists.
+
+3. Modified the LLM API call mechanism to read from a .env file. Now you can easily switch or invoke the desired OpenAI API Key or Gemini API Key by specifying it in the .env file. I provide a `.env.example` file in the repo, you can remove the `.example` to use it.
+
+Many thanks to [Mr. Yamauchi](https://github.com/Takatakatake ) for his valuable suggestions!
+
 ## Key Features
 
 - 📄 **Efficient Content Extraction**: Utilizes [MinerU](https://github.com/opendatalab/MinerU?tab=readme-ov-file#2-download-model-weight-files) for high-quality content extraction from academic PDFs.
