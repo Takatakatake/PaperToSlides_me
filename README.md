@@ -57,7 +57,7 @@ To get started, follow these steps:
 ---
 ## Additional Information
 
-Below is a concise installation and troubleshooting guide written by Mr. Yamauchi. Special thanks to him for his contribution!
+Below is a concise installation and troubleshooting guide written by [Mr. Yamauchi](https://github.com/Takatakatake ). Special thanks to him for his contribution!
 
 This document details the installation process, provides clarifications on the instructions in the README.md file, and outlines the errors I encountered along with their solutions.
 
