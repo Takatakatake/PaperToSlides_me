@@ -10,7 +10,8 @@
 [![forks](https://img.shields.io/github/forks/opendatalab/MinerU.svg)](https://github.com/opendatalab/MinerU)
 [![open issues](https://img.shields.io/github/issues-raw/opendatalab/MinerU)](https://github.com/opendatalab/MinerU/issues)
 [![issue resolution](https://img.shields.io/github/issues-closed-raw/opendatalab/MinerU)](https://github.com/opendatalab/MinerU/issues)
-[![PyPI version](https://badge.fury.io/py/magic-pdf.svg)](https://badge.fury.io/py/magic-pdf)
+[![PyPI version](https://img.shields.io/pypi/v/magic-pdf)](https://pypi.org/project/magic-pdf/)
+[![PyPI - Python Version](https://img.shields.io/pypi/pyversions/magic-pdf)](https://pypi.org/project/magic-pdf/)
 [![Downloads](https://static.pepy.tech/badge/magic-pdf)](https://pepy.tech/project/magic-pdf)
 [![Downloads](https://static.pepy.tech/badge/magic-pdf/month)](https://pepy.tech/project/magic-pdf)
 
@@ -47,59 +48,198 @@ Easier to use: Just grab MinerU Desktop. No coding, no login, just a simple inte
 </div>
 
 # Changelog
-- 2025/03/03 1.2.1 released, fixed several bugs:
-  - Fixed the impact on punctuation marks during full-width to half-width conversion of letters and numbers
-  - Fixed caption matching inaccuracies in certain scenarios
-  - Fixed formula span loss issues in certain scenarios
-- 2025/02/24 1.2.0 released. This version includes several fixes and improvements to enhance parsing efficiency and accuracy:
-  - Performance Optimization
-    - Increased classification speed for PDF documents in auto mode.
-  - Parsing Optimization
-    - Improved parsing logic for documents containing watermarks, significantly enhancing the parsing results for such documents.
-    - Enhanced the matching logic for multiple images/tables and captions within a single page, improving the accuracy of image-text matching in complex layouts.
-  - Bug Fixes
-    - Fixed an issue where image/table spans were incorrectly filled into text blocks under certain conditions.
-    - Resolved an issue where title blocks were empty in some cases.
-- 2025/01/22 1.1.0 released. In this version we have focused on improving parsing accuracy and efficiency:
-  - Model capability upgrade (requires re-executing the [model download process](docs/how_to_download_models_en.md) to obtain incremental updates of model files)
-    - The layout recognition model has been upgraded to the latest `doclayout_yolo(2501)` model, improving layout recognition accuracy.
-    - The formula parsing model has been upgraded to the latest `unimernet(2501)` model, improving formula recognition accuracy.
+- 2025/04/29 1.3.10 Released
+  - Support for custom formula delimiters can be achieved by modifying the `latex-delimiter-config` item in the `magic-pdf.json` file under the user directory.
+  - Pinned `pdfminer.six` to version `20250324` to prevent parsing failures caused by new versions.
+- 2025/04/27 1.3.9 Released  
+  - Optimized the formula parsing function to improve the success rate of formula rendering  
+  - Updated `pdfminer.six` to the latest version, fixing some abnormal PDF parsing issues
+- 2025/04/23 1.3.8 Released
+  - The default `ocr` model (`ch`) has been updated to `PP-OCRv4_server_rec_doc` (model update required)
+    - `PP-OCRv4_server_rec_doc` is trained on a mix of more Chinese document data and PP-OCR training data, enhancing recognition capabilities for some traditional Chinese characters, Japanese, and special characters. It supports over 15,000 recognizable characters, improving text recognition in documents while also boosting general text recognition.
+    - [Performance comparison between PP-OCRv4_server_rec_doc, PP-OCRv4_server_rec, and PP-OCRv4_mobile_rec](https://paddlepaddle.github.io/PaddleX/latest/en/module_usage/tutorials/ocr_modules/text_recognition.html#ii-supported-model-list)
+    - Verified results show that the `PP-OCRv4_server_rec_doc` model significantly improves accuracy in both single-language (`Chinese`, `English`, `Japanese`, `Traditional Chinese`) and mixed-language scenarios, with speed comparable to `PP-OCRv4_server_rec`, making it suitable for most use cases.
+    - In a small number of pure English scenarios, the `PP-OCRv4_server_rec_doc` model may encounter word concatenation issues, whereas `PP-OCRv4_server_rec` performs better in such cases. Therefore, we have retained the `PP-OCRv4_server_rec` model, which users can invoke by passing the parameter `lang='ch_server'`(python api) or `--lang ch_server`(cli).
+- 2025/04/22 1.3.7 Released
+  - Fixed the issue where the `lang` parameter was ineffective during table parsing model initialization.
+  - Fixed the significant slowdown in OCR and table parsing speed in `cpu` mode.
+- 2025/04/16 1.3.4 Released
+  - Slightly improved the speed of OCR detection by removing some unused blocks.
+  - Fixed page-level sorting errors caused by footnotes in certain cases.
+- 2025/04/12 1.3.2 released
+  - Fixed the issue of incompatible dependency package versions when installing in Python 3.13 environment on Windows systems.
+  - Optimized memory usage during batch inference.
+  - Improved the parsing effect of tables rotated by 90 degrees.
+  - Enhanced the parsing accuracy for large tables in financial report samples.
+  - Fixed the occasional word concatenation issue in English text areas when OCR language is not specified.(The model needs to be updated)
+- 2025/04/08 1.3.1 released, fixed some compatibility issues
+  - Supported Python 3.13
+  - Made the final adaptation for some outdated Linux systems (e.g., CentOS 7), and no further support will be guaranteed for subsequent versions. [Installation Instructions](https://github.com/opendatalab/MinerU/issues/1004)
+- 2025/04/03 1.3.0 released, in this version we made many optimizations and improvements:
+  - Installation and compatibility optimization
+    - By removing the use of `layoutlmv3` in layout, resolved compatibility issues caused by `detectron2`.
+    - Torch version compatibility extended to 2.2~2.6 (excluding 2.5).
+    - CUDA compatibility supports 11.8/12.4/12.6/12.8 (CUDA version determined by torch), resolving compatibility issues for some users with 50-series and H-series GPUs.
+    - Python compatible versions expanded to 3.10~3.12, solving the problem of automatic downgrade to 0.6.1 during installation in non-3.10 environments.
+    - Offline deployment process optimized; no internet connection required after successful deployment to download any model files.
   - Performance optimization
-    - On devices that meet certain configuration requirements (16GB+ VRAM), by optimizing resource usage and restructuring the processing pipeline, overall parsing speed has been increased by more than 50%.
+    - By supporting batch processing of multiple PDF files ([script example](demo/batch_demo.py)), improved parsing speed for small files in batches (compared to version 1.0.1, formula parsing speed increased by over 1400%, overall parsing speed increased by over 500%).
+    - Optimized loading and usage of the mfr model, reducing GPU memory usage and improving parsing speed (requires re-execution of the [model download process](docs/how_to_download_models_en.md) to obtain incremental updates of model files).
+    - Optimized GPU memory usage, requiring only a minimum of 6GB to run this project.
+    - Improved running speed on MPS devices.
   - Parsing effect optimization
-    - Added a new heading classification feature (testing version, enabled by default) to the online demo([mineru.net](https://mineru.net/OpenSourceTools/Extractor)/[huggingface](https://huggingface.co/spaces/opendatalab/MinerU)/[modelscope](https://www.modelscope.cn/studios/OpenDataLab/MinerU)), which supports hierarchical classification of headings, thereby enhancing document structuring.
-- 2025/01/10 1.0.1 released. This is our first official release, where we have introduced a completely new API interface and enhanced compatibility through extensive refactoring, as well as a brand new automatic language identification feature:
-  - New API Interface
-    - For the data-side API, we have introduced the Dataset class, designed to provide a robust and flexible data processing framework. This framework currently supports a variety of document formats, including images (.jpg and .png), PDFs, Word documents (.doc and .docx), and PowerPoint presentations (.ppt and .pptx). It ensures effective support for data processing tasks ranging from simple to complex.
-    - For the user-side API, we have meticulously designed the MinerU processing workflow as a series of composable Stages. Each Stage represents a specific processing step, allowing users to define new Stages according to their needs and creatively combine these stages to customize their data processing workflows.
-  - Enhanced Compatibility
-    - By optimizing the dependency environment and configuration items, we ensure stable and efficient operation on ARM architecture Linux systems.
-    - We have deeply integrated with Huawei Ascend NPU acceleration, providing autonomous and controllable high-performance computing capabilities. This supports the localization and development of AI application platforms in China. [Ascend NPU Acceleration](docs/README_Ascend_NPU_Acceleration_zh_CN.md)
-  - Automatic Language Identification
-    - By introducing a new language recognition model, setting the `lang` configuration to `auto` during document parsing will automatically select the appropriate OCR language model, improving the accuracy of scanned document parsing.
-- 2024/11/22 0.10.0 released. Introducing hybrid OCR text extraction capabilities,
-  - Significantly improved parsing performance in complex text distribution scenarios such as dense formulas, irregular span regions, and text represented by images.
-  - Combines the dual advantages of accurate content extraction and faster speed in text mode, and more precise span/line region recognition in OCR mode.
-- 2024/11/15 0.9.3 released. Integrated [RapidTable](https://github.com/RapidAI/RapidTable) for table recognition, improving single-table parsing speed by more than 10 times, with higher accuracy and lower GPU memory usage.
-- 2024/11/06 0.9.2 released. Integrated the [StructTable-InternVL2-1B](https://huggingface.co/U4R/StructTable-InternVL2-1B) model for table recognition functionality.
-- 2024/10/31 0.9.0 released. This is a major new version with extensive code refactoring, addressing numerous issues, improving performance, reducing hardware requirements, and enhancing usability:
-  - Refactored the sorting module code to use [layoutreader](https://github.com/ppaanngggg/layoutreader) for reading order sorting, ensuring high accuracy in various layouts.
-  - Refactored the paragraph concatenation module to achieve good results in cross-column, cross-page, cross-figure, and cross-table scenarios.
-  - Refactored the list and table of contents recognition functions, significantly improving the accuracy of list blocks and table of contents blocks, as well as the parsing of corresponding text paragraphs.
-  - Refactored the matching logic for figures, tables, and descriptive text, greatly enhancing the accuracy of matching captions and footnotes to figures and tables, and reducing the loss rate of descriptive text to near zero.
-  - Added multi-language support for OCR, supporting detection and recognition of 84 languages.For the list of supported languages, see [OCR Language Support List](https://paddlepaddle.github.io/PaddleOCR/latest/en/ppocr/blog/multi_languages.html#5-support-languages-and-abbreviations).
-  - Added memory recycling logic and other memory optimization measures, significantly reducing memory usage. The memory requirement for enabling all acceleration features except table acceleration (layout/formula/OCR) has been reduced from 16GB to 8GB, and the memory requirement for enabling all acceleration features has been reduced from 24GB to 10GB.
-  - Optimized configuration file feature switches, adding an independent formula detection switch to significantly improve speed and parsing results when formula detection is not needed.
-  - Integrated [PDF-Extract-Kit 1.0](https://github.com/opendatalab/PDF-Extract-Kit):
-    - Added the self-developed `doclayout_yolo` model, which speeds up processing by more than 10 times compared to the original solution while maintaining similar parsing effects, and can be freely switched with `layoutlmv3` via the configuration file.
-    - Upgraded formula parsing to `unimernet 0.2.1`, improving formula parsing accuracy while significantly reducing memory usage.
-    - Due to the repository change for `PDF-Extract-Kit 1.0`, you need to re-download the model. Please refer to [How to Download Models](docs/how_to_download_models_en.md) for detailed steps.
-- 2024/09/27 Version 0.8.1 released, Fixed some bugs, and providing a [localized deployment version](projects/web_demo/README.md) of the [online demo](https://opendatalab.com/OpenSourceTools/Extractor/PDF/) and the [front-end interface](projects/web/README.md).
-- 2024/09/09: Version 0.8.0 released, supporting fast deployment with Dockerfile, and launching demos on Huggingface and Modelscope.
-- 2024/08/30: Version 0.7.1 released, add paddle tablemaster table recognition option
-- 2024/08/09: Version 0.7.0b1 released, simplified installation process, added table recognition functionality
-- 2024/08/01: Version 0.6.2b1 released, optimized dependency conflict issues and installation documentation
-- 2024/07/05: Initial open-source release
+    - Updated the mfr model to `unimernet(2503)`, solving the issue of lost line breaks in multi-line formulas.
+  - Usability Optimization
+    - By using `paddleocr2torch`, completely replaced the use of the `paddle` framework and `paddleocr` in the project, resolving conflicts between `paddle` and `torch`, as well as thread safety issues caused by the `paddle` framework.
+    - Added a real-time progress bar during the parsing process to accurately track progress, making the wait less painful.
+<details>
+<summary>2025/03/03 1.2.1 released</summary>
+<ul>
+  <li>Fixed the impact on punctuation marks during full-width to half-width conversion of letters and numbers</li>
+  <li>Fixed caption matching inaccuracies in certain scenarios</li>
+  <li>Fixed formula span loss issues in certain scenarios</li>
+</ul>
+</details>
+
+<details>
+<summary>2025/02/24 1.2.0 released</summary>
+<p>This version includes several fixes and improvements to enhance parsing efficiency and accuracy:</p>
+<ul>
+  <li><strong>Performance Optimization</strong>
+    <ul>
+      <li>Increased classification speed for PDF documents in auto mode.</li>
+    </ul>
+  </li>
+  <li><strong>Parsing Optimization</strong>
+    <ul>
+      <li>Improved parsing logic for documents containing watermarks, significantly enhancing the parsing results for such documents.</li>
+      <li>Enhanced the matching logic for multiple images/tables and captions within a single page, improving the accuracy of image-text matching in complex layouts.</li>
+    </ul>
+  </li>
+  <li><strong>Bug Fixes</strong>
+    <ul>
+      <li>Fixed an issue where image/table spans were incorrectly filled into text blocks under certain conditions.</li>
+      <li>Resolved an issue where title blocks were empty in some cases.</li>
+    </ul>
+  </li>
+</ul>
+</details>
+
+<details>
+<summary>2025/01/22 1.1.0 released</summary>
+<p>In this version we have focused on improving parsing accuracy and efficiency:</p>
+<ul>
+  <li><strong>Model capability upgrade</strong> (requires re-executing the <a href="https://github.com/opendatalab/MinerU/blob/master/docs/how_to_download_models_en.md">model download process</a> to obtain incremental updates of model files)
+    <ul>
+      <li>The layout recognition model has been upgraded to the latest <code>doclayout_yolo(2501)</code> model, improving layout recognition accuracy.</li>
+      <li>The formula parsing model has been upgraded to the latest <code>unimernet(2501)</code> model, improving formula recognition accuracy.</li>
+    </ul>
+  </li>
+  <li><strong>Performance optimization</strong>
+    <ul>
+      <li>On devices that meet certain configuration requirements (16GB+ VRAM), by optimizing resource usage and restructuring the processing pipeline, overall parsing speed has been increased by more than 50%.</li>
+    </ul>
+  </li>
+  <li><strong>Parsing effect optimization</strong>
+    <ul>
+      <li>Added a new heading classification feature (testing version, enabled by default) to the online demo (<a href="https://mineru.net/OpenSourceTools/Extractor">mineru.net</a>/<a href="https://huggingface.co/spaces/opendatalab/MinerU">huggingface</a>/<a href="https://www.modelscope.cn/studios/OpenDataLab/MinerU">modelscope</a>), which supports hierarchical classification of headings, thereby enhancing document structuring.</li>
+    </ul>
+  </li>
+</ul>
+</details>
+
+<details>
+<summary>2025/01/10 1.0.1 released</summary>
+<p>This is our first official release, where we have introduced a completely new API interface and enhanced compatibility through extensive refactoring, as well as a brand new automatic language identification feature:</p>
+<ul>
+  <li><strong>New API Interface</strong>
+    <ul>
+      <li>For the data-side API, we have introduced the Dataset class, designed to provide a robust and flexible data processing framework. This framework currently supports a variety of document formats, including images (.jpg and .png), PDFs, Word documents (.doc and .docx), and PowerPoint presentations (.ppt and .pptx). It ensures effective support for data processing tasks ranging from simple to complex.</li>
+      <li>For the user-side API, we have meticulously designed the MinerU processing workflow as a series of composable Stages. Each Stage represents a specific processing step, allowing users to define new Stages according to their needs and creatively combine these stages to customize their data processing workflows.</li>
+    </ul>
+  </li>
+  <li><strong>Enhanced Compatibility</strong>
+    <ul>
+      <li>By optimizing the dependency environment and configuration items, we ensure stable and efficient operation on ARM architecture Linux systems.</li>
+      <li>We have deeply integrated with Huawei Ascend NPU acceleration, providing autonomous and controllable high-performance computing capabilities. This supports the localization and development of AI application platforms in China. <a href="https://github.com/opendatalab/MinerU/blob/master/docs/README_Ascend_NPU_Acceleration_zh_CN.md">Ascend NPU Acceleration</a></li>
+    </ul>
+  </li>
+  <li><strong>Automatic Language Identification</strong>
+    <ul>
+      <li>By introducing a new language recognition model, setting the <code>lang</code> configuration to <code>auto</code> during document parsing will automatically select the appropriate OCR language model, improving the accuracy of scanned document parsing.</li>
+    </ul>
+  </li>
+</ul>
+</details>
+
+<details>
+<summary>2024/11/22 0.10.0 released</summary>
+<p>Introducing hybrid OCR text extraction capabilities:</p>
+<ul>
+  <li>Significantly improved parsing performance in complex text distribution scenarios such as dense formulas, irregular span regions, and text represented by images.</li>
+  <li>Combines the dual advantages of accurate content extraction and faster speed in text mode, and more precise span/line region recognition in OCR mode.</li>
+</ul>
+</details>
+
+<details>
+<summary>2024/11/15 0.9.3 released</summary>
+<p>Integrated <a href="https://github.com/RapidAI/RapidTable">RapidTable</a> for table recognition, improving single-table parsing speed by more than 10 times, with higher accuracy and lower GPU memory usage.</p>
+</details>
+
+<details>
+<summary>2024/11/06 0.9.2 released</summary>
+<p>Integrated the <a href="https://huggingface.co/U4R/StructTable-InternVL2-1B">StructTable-InternVL2-1B</a> model for table recognition functionality.</p>
+</details>
+
+<details>
+<summary>2024/10/31 0.9.0 released</summary>
+<p>This is a major new version with extensive code refactoring, addressing numerous issues, improving performance, reducing hardware requirements, and enhancing usability:</p>
+<ul>
+  <li>Refactored the sorting module code to use <a href="https://github.com/ppaanngggg/layoutreader">layoutreader</a> for reading order sorting, ensuring high accuracy in various layouts.</li>
+  <li>Refactored the paragraph concatenation module to achieve good results in cross-column, cross-page, cross-figure, and cross-table scenarios.</li>
+  <li>Refactored the list and table of contents recognition functions, significantly improving the accuracy of list blocks and table of contents blocks, as well as the parsing of corresponding text paragraphs.</li>
+  <li>Refactored the matching logic for figures, tables, and descriptive text, greatly enhancing the accuracy of matching captions and footnotes to figures and tables, and reducing the loss rate of descriptive text to near zero.</li>
+  <li>Added multi-language support for OCR, supporting detection and recognition of 84 languages. For the list of supported languages, see <a href="https://paddlepaddle.github.io/PaddleOCR/latest/en/ppocr/blog/multi_languages.html#5-support-languages-and-abbreviations">OCR Language Support List</a>.</li>
+  <li>Added memory recycling logic and other memory optimization measures, significantly reducing memory usage. The memory requirement for enabling all acceleration features except table acceleration (layout/formula/OCR) has been reduced from 16GB to 8GB, and the memory requirement for enabling all acceleration features has been reduced from 24GB to 10GB.</li>
+  <li>Optimized configuration file feature switches, adding an independent formula detection switch to significantly improve speed and parsing results when formula detection is not needed.</li>
+  <li>Integrated <a href="https://github.com/opendatalab/PDF-Extract-Kit">PDF-Extract-Kit 1.0</a>:
+    <ul>
+      <li>Added the self-developed <code>doclayout_yolo</code> model, which speeds up processing by more than 10 times compared to the original solution while maintaining similar parsing effects, and can be freely switched with <code>layoutlmv3</code> via the configuration file.</li>
+      <li>Upgraded formula parsing to <code>unimernet 0.2.1</code>, improving formula parsing accuracy while significantly reducing memory usage.</li>
+      <li>Due to the repository change for <code>PDF-Extract-Kit 1.0</code>, you need to re-download the model. Please refer to <a href="https://github.com/opendatalab/MinerU/blob/master/docs/how_to_download_models_en.md">How to Download Models</a> for detailed steps.</li>
+    </ul>
+  </li>
+</ul>
+</details>
+
+<details>
+<summary>2024/09/27 Version 0.8.1 released</summary>
+<p>Fixed some bugs, and providing a <a href="https://github.com/opendatalab/MinerU/blob/master/projects/web_demo/README.md">localized deployment version</a> of the <a href="https://opendatalab.com/OpenSourceTools/Extractor/PDF/">online demo</a> and the <a href="https://github.com/opendatalab/MinerU/blob/master/projects/web/README.md">front-end interface</a>.</p>
+</details>
+
+<details>
+<summary>2024/09/09 Version 0.8.0 released</summary>
+<p>Supporting fast deployment with Dockerfile, and launching demos on Huggingface and Modelscope.</p>
+</details>
+
+<details>
+<summary>2024/08/30 Version 0.7.1 released</summary>
+<p>Add paddle tablemaster table recognition option</p>
+</details>
+
+<details>
+<summary>2024/08/09 Version 0.7.0b1 released</summary>
+<p>Simplified installation process, added table recognition functionality</p>
+</details>
+
+<details>
+<summary>2024/08/01 Version 0.6.2b1 released</summary>
+<p>Optimized dependency conflict issues and installation documentation</p>
+</details>
+
+<details>
+<summary>2024/07/05 Initial open-source release</summary>
+</details>
 
 <!-- TABLE OF CONTENT -->
 
@@ -215,7 +355,7 @@ There are three different ways to experience MinerU:
     </tr>
     <tr>
         <td colspan="3">Python Version</td>
-        <td colspan="3">3.10(Please make sure to create a Python 3.10 virtual environment using conda)</td>
+        <td colspan="3">>=3.10</td>
     </tr>
     <tr>
         <td colspan="3">Nvidia Driver Version</td>
@@ -225,8 +365,8 @@ There are three different ways to experience MinerU:
     </tr>
     <tr>
         <td colspan="3">CUDA Environment</td>
-        <td>Automatic installation [12.1 (pytorch) + 11.8 (paddle)]</td>
-        <td>11.8 (manual installation) + cuDNN v8.7.0 (manual installation)</td>
+        <td>11.8/12.4/12.6/12.8</td>
+        <td>11.8/12.4/12.6/12.8</td>
         <td>None</td>
     </tr>
     <tr>
@@ -236,11 +376,11 @@ There are three different ways to experience MinerU:
         <td>None</td>
     </tr>
     <tr>
-        <td rowspan="2">GPU Hardware Support List</td>
-        <td colspan="2">GPU VRAM 8GB or more</td>
-        <td colspan="2">2080~2080Ti / 3060Ti~3090Ti / 4060~4090<br>
-        8G VRAM can enable all acceleration features</td>
-        <td rowspan="2">None</td>
+        <td rowspan="2">GPU/MPS Hardware Support List</td>
+        <td colspan="2">GPU VRAM 6GB or more</td>
+        <td colspan="2">All GPUs with Tensor Cores produced from Volta(2017) onwards.<br>
+        More than 6GB VRAM </td>
+        <td rowspan="2">Apple silicon</td>
     </tr>
 </table>
 
@@ -257,9 +397,9 @@ Synced with dev branch updates:
 #### 1. Install magic-pdf
 
 ```bash
-conda create -n mineru python=3.10
+conda create -n mineru 'python>=3.10' -y
 conda activate mineru
-pip install -U "magic-pdf[full]" --extra-index-url https://wheels.myhloli.com
+pip install -U "magic-pdf[full]"
 ```
 
 #### 2. Download model weight files
@@ -284,7 +424,7 @@ You can modify certain configurations in this file to enable or disable features
 {
     // other config
     "layout-config": {
-        "model": "doclayout_yolo" // Please change to "layoutlmv3" when using layoutlmv3.
+        "model": "doclayout_yolo" 
     },
     "formula-config": {
         "mfd_model": "yolo_v8_mfd",
@@ -292,8 +432,8 @@ You can modify certain configurations in this file to enable or disable features
         "enable": true  // The formula recognition feature is enabled by default. If you need to disable it, please change the value here to "false".
     },
     "table-config": {
-        "model": "rapid_table",  // Default to using "rapid_table", can be switched to "tablemaster" or "struct_eqtable".
-        "sub_model": "slanet_plus",  // When the model is "rapid_table", you can choose a sub_model. The options are "slanet_plus" and "unitable"
+        "model": "rapid_table", 
+        "sub_model": "slanet_plus",
         "enable": true, // The table recognition feature is enabled by default. If you need to disable it, please change the value here to "false".
         "max_time": 400
     }
@@ -308,7 +448,7 @@ If your device supports CUDA and meets the GPU requirements of the mainline envi
 - [Windows 10/11 + GPU](docs/README_Windows_CUDA_Acceleration_en_US.md)
 - Quick Deployment with Docker
 > [!IMPORTANT]
-> Docker requires a GPU with at least 8GB of VRAM, and all acceleration features are enabled by default.
+> Docker requires a GPU with at least 6GB of VRAM, and all acceleration features are enabled by default.
 >
 > Before running this Docker, you can use the following command to check if your device supports CUDA acceleration on Docker.
 > 
@@ -330,7 +470,7 @@ If your device has NPU acceleration hardware, you can follow the tutorial below 
 
 ### Using MPS
 
-If your device uses Apple silicon chips, you can enable MPS acceleration for certain supported tasks (such as layout detection and formula detection).
+If your device uses Apple silicon chips, you can enable MPS acceleration for your tasks.
 
 You can enable MPS acceleration by setting the `device-mode` parameter to `mps` in the `magic-pdf.json` configuration file.
 
@@ -341,10 +481,6 @@ You can enable MPS acceleration by setting the `device-mode` parameter to `mps` 
 }
 ```
 
-> [!TIP]
-> Since the formula recognition task cannot utilize MPS acceleration, you can disable the formula recognition feature in tasks where it is not needed to achieve optimal performance.
->
-> You can disable the formula recognition feature by setting the `enable` parameter in the `formula-config` section to `false`.
 
 ## Usage
 
@@ -418,6 +554,8 @@ This project currently uses PyMuPDF to achieve advanced functionality. However, 
 - [StructEqTable](https://github.com/UniModal4Reasoning/StructEqTable-Deploy)
 - [RapidTable](https://github.com/RapidAI/RapidTable)
 - [PaddleOCR](https://github.com/PaddlePaddle/PaddleOCR)
+- [RapidOCR](https://github.com/RapidAI/RapidOCR)
+- [PaddleOCR2Pytorch](https://github.com/frotms/PaddleOCR2Pytorch)
 - [PyMuPDF](https://github.com/pymupdf/PyMuPDF)
 - [layoutreader](https://github.com/ppaanngggg/layoutreader)
 - [fast-langdetect](https://github.com/LlmKira/fast-langdetect)

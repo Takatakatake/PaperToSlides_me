@@ -1,48 +1,80 @@
 import os
 
 from magic_pdf.data.data_reader_writer import FileBasedDataWriter, FileBasedDataReader
-from magic_pdf.libs.MakeContentConfig import DropMode, MakeMode
-from magic_pdf.pipe.OCRPipe import OCRPipe
+from magic_pdf.data.dataset import PymuDocDataset
+from magic_pdf.model.doc_analyze_by_custom_model import doc_analyze
+from magic_pdf.config.enums import SupportedPdfParseMethod
 
 
 ## args
-model_list = []
 pdf_file_name = "data/Example.pdf"  # replace with the real pdf path
-
+name_without_suff = os.path.splitext(os.path.basename(pdf_file_name))[0]
 
 ## prepare env
 local_image_dir, local_md_dir = "output/images", "output"
+image_dir = os.path.basename(local_image_dir)
+
 os.makedirs(local_image_dir, exist_ok=True)
 
 image_writer, md_writer = FileBasedDataWriter(local_image_dir), FileBasedDataWriter(
     local_md_dir
-) # create 00
-image_dir = str(os.path.basename(local_image_dir))
-
-reader1 = FileBasedDataReader("")
-pdf_bytes = reader1.read(pdf_file_name)   # read the pdf content
-
-
-pipe = OCRPipe(pdf_bytes, model_list, image_writer)
-
-pipe.pipe_classify()
-pipe.pipe_analyze()
-pipe.pipe_parse()
-
-pdf_info = pipe.pdf_mid_data["pdf_info"]
-
-
-md_content = pipe.pipe_mk_markdown(
-    image_dir, drop_mode=DropMode.NONE, md_make_mode=MakeMode.MM_MD
 )
 
-if isinstance(md_content, list):
-    md_writer.write_string(f"{pdf_file_name}.md", "\n".join(md_content))
+# read bytes
+reader = FileBasedDataReader("")
+pdf_bytes = reader.read(pdf_file_name)  # read the pdf content
+
+# proc
+## Create Dataset Instance
+ds = PymuDocDataset(pdf_bytes)
+
+## inference
+if ds.classify() == SupportedPdfParseMethod.OCR:
+    infer_result = ds.apply(doc_analyze, ocr=True)
+
+    ## pipeline
+    pipe_result = infer_result.pipe_ocr_mode(image_writer)
 else:
-    md_writer.write_string(f"{pdf_file_name}.md", md_content)
+    infer_result = ds.apply(doc_analyze, ocr=False)
+
+    ## pipeline
+    pipe_result = infer_result.pipe_txt_mode(image_writer)
+
+### draw model result on each page
+infer_result.draw_model(os.path.join(local_md_dir, f"{name_without_suff}_model.pdf"))
+
+### get model inference result
+model_inference_result = infer_result.get_infer_res()
+
+### draw layout result on each page
+pipe_result.draw_layout(os.path.join(local_md_dir, f"{name_without_suff}_layout.pdf"))
+
+### draw spans result on each page
+pipe_result.draw_span(os.path.join(local_md_dir, f"{name_without_suff}_spans.pdf"))
+
+### get markdown content
+md_content = pipe_result.get_markdown(image_dir)
+
+### dump markdown
+pipe_result.dump_md(md_writer, f"{name_without_suff}.md", image_dir)
+
+### get content list content
+content_list_content = pipe_result.get_content_list(image_dir)
+
+### dump content list
+pipe_result.dump_content_list(md_writer, f"{name_without_suff}_content_list.json", image_dir)
+
+### get middle json
+middle_json_content = pipe_result.get_middle_json()
+
+### dump middle json
+pipe_result.dump_middle_json(md_writer, f'{name_without_suff}_middle.json')
 
 
 def extract_pdf_to_markdown(pdf_file_name, output_dir):
+    """
+    提取PDF文件内容并转换为Markdown格式
+    """
     local_image_dir = os.path.join(output_dir, "images")
     os.makedirs(local_image_dir, exist_ok=True)
     
@@ -53,16 +85,28 @@ def extract_pdf_to_markdown(pdf_file_name, output_dir):
     reader = FileBasedDataReader("")
     pdf_bytes = reader.read(pdf_file_name)
     
-    pipe = OCRPipe(pdf_bytes, [], image_writer)
-    pipe.pipe_classify()
-    pipe.pipe_analyze()
-    pipe.pipe_parse()
+    name_without_suff = os.path.splitext(os.path.basename(pdf_file_name))[0]
+    md_file_path = os.path.join(output_dir, f"{name_without_suff}.md")
     
-    md_content = pipe.pipe_mk_markdown(
-        image_dir, drop_mode=DropMode.NONE, md_make_mode=MakeMode.MM_MD
-    )
-    md_file_name = f"{os.path.splitext(os.path.basename(pdf_file_name))[0]}.md"
-    md_file_path = os.path.join(output_dir, md_file_name)
-    md_writer.write_string(md_file_path, md_content if isinstance(md_content, str) else "\n".join(md_content))
+    # 创建数据集实例
+    ds = PymuDocDataset(pdf_bytes)
+    
+    # 根据PDF类型进行不同处理
+    if ds.classify() == SupportedPdfParseMethod.OCR:
+        infer_result = ds.apply(doc_analyze, ocr=True)
+        pipe_result = infer_result.pipe_ocr_mode(image_writer)
+    else:
+        infer_result = ds.apply(doc_analyze, ocr=False)
+        pipe_result = infer_result.pipe_txt_mode(image_writer)
+    
+    # 导出Markdown
+    pipe_result.dump_md(md_writer, f"{name_without_suff}.md", image_dir)
+    
+    # 导出其他可选结果
+    infer_result.draw_model(os.path.join(output_dir, f"{name_without_suff}_model.pdf"))
+    pipe_result.draw_layout(os.path.join(output_dir, f"{name_without_suff}_layout.pdf"))
+    pipe_result.draw_span(os.path.join(output_dir, f"{name_without_suff}_spans.pdf"))
+    pipe_result.dump_content_list(md_writer, f"{name_without_suff}_content_list.json", image_dir)
+    pipe_result.dump_middle_json(md_writer, f'{name_without_suff}_middle.json')
     
     return md_file_path
