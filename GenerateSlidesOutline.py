@@ -3,29 +3,56 @@ import re
 import base64
 import pptx
 from pptx.util import Inches
+import argparse
 
 # Import the necessary functions from MinerU.py
-# from MinerU import extract_pdf_to_markdown
+from MinerU import extract_pdf_to_markdown
 
 # 导入 OpenAI API
 from openai import OpenAI
 
+# Setup command line argument parser
+parser = argparse.ArgumentParser(description='Generate PowerPoint slides from PDF papers')
+parser.add_argument('--model', type=str, default='openai', 
+                    help='LLM model to use (default: openai, options: openai, gemini, claude, grok)')
+parser.add_argument('--pdf', type=str, default='data/Example.pdf',
+                    help='Path to PDF file (default: data/Example.pdf)')
+parser.add_argument('--output', type=str, default='Generated_Slides.pptx',
+                    help='Output PowerPoint file name (default: Generated_Slides.pptx)')
+args = parser.parse_args()
+
+# Set API keys
 os.environ["OPENAI_API_KEY"] = "your_openai_api_key_here"
 
+# Inform user about model selection
+if args.model != 'openai':
+    print(f"You selected the {args.model} model, but currently only the OpenAI model is implemented.")
+    print(f"To use {args.model}, please ensure you have set the appropriate API keys and modify the code accordingly.")
+    print("Continuing with the OpenAI model...")
+
 # Define file paths
-pdf_file_name = "data/Example.pdf"  # replace with your PDF path
+pdf_file_name = args.pdf  # Use PDF path from command line arguments
 local_md_dir = "output"
 os.makedirs(local_md_dir, exist_ok=True)
 
-# Use the function from MinerU.py to extract the PDF content
-# md_file_path = extract_pdf_to_markdown(pdf_file_name, local_md_dir)
-md_file_path = "output/Example/auto/Example.md"
+# Get the expected markdown file path
+pdf_base_name = os.path.splitext(os.path.basename(pdf_file_name))[0]
+expected_md_path = os.path.join(local_md_dir, pdf_base_name, "auto", f"{pdf_base_name}.md")
+
+# Check if Markdown file already exists
+if os.path.exists(expected_md_path):
+    print(f"Markdown file already exists: {expected_md_path}, skipping PDF parsing")
+    md_file_path = expected_md_path
+else:
+    # If not, extract PDF content using function from MinerU.py
+    print(f"Markdown file does not exist, parsing PDF content...")
+    md_file_path = extract_pdf_to_markdown(pdf_file_name, local_md_dir)
 
 # Load the extracted markdown content
 with open(md_file_path, "r", encoding="utf-8") as f:
     md_text = f.read()
 
-# 提取 Markdown 中的图片路径
+# Extract image paths from Markdown
 image_paths = re.findall(r'!\[.*?\]\((.*?)\)', md_text)
 
 # Function to encode images to base64
@@ -33,9 +60,8 @@ def encode_image(image_path):
     with open(image_path, "rb") as image_file:
         return base64.b64encode(image_file.read()).decode('utf-8')
 
-# Update image_messages with base64-encoded images
+# Create image messages with base64-encoded images
 image_messages = []
-pdf_base_name = os.path.splitext(os.path.basename(pdf_file_name))[0]
 for image_path in image_paths:
     full_image_path = "/".join(["output", pdf_base_name, "auto", image_path])
     base64_image = encode_image(full_image_path)
@@ -48,7 +74,7 @@ for image_path in image_paths:
         }
     )
 
-# Add this function after the image handling code
+# Function to load prompt template
 def load_prompt_template(template_path):
     with open(template_path, "r", encoding="utf-8") as f:
         return f.read()
@@ -56,11 +82,20 @@ def load_prompt_template(template_path):
 # Load the prompt template
 prompt_template = load_prompt_template("GenerateSlidesOutlinePrompt.md")
 
-# 初始化 OpenAI 客户端
+# Initialize OpenAI client
 client = OpenAI(
     # This is the default and can be omitted
     api_key=os.environ.get("OPENAI_API_KEY"),
 )
+
+# If you want to use other models, you can change the client and model name here
+# import google.generativeai as genai
+# gemeni_client = genai.GenerativeModel(api_key=os.environ.get("GEMINI_API_KEY"))
+
+# grok_client = OpenAI(
+#     api_key=os.environ.get("GROK_API_KEY"),
+#     base_url=os.environ.get("GROK_API_ENDPOINT"),
+# )   
 
 # Build the messages list with base64-encoded images
 messages = [
@@ -75,22 +110,29 @@ messages = [
     }
 ]
 
-# 使用 GPT-4o 生成 PPT 大纲
+# Generate PowerPoint outline using OpenAI model
+print(f"Generating presentation outline using OpenAI model...")
 response = client.chat.completions.create(
-    model="gpt-4o",
-    messages=messages,
-    max_tokens=300,
+    model="gpt-4.1",
+    messages=messages
 )
 
-# 提取生成的 PPT 大纲
+# Extract the generated PowerPoint outline
 ppt_outline = response.choices[0].message.content.split("\n")
 
-# 整理 PPT 大纲
+# Format the PowerPoint outline
 formatted_outline = "\n".join(ppt_outline)
 print(formatted_outline)
 
 # Function to create a PowerPoint presentation from the outline
-def create_ppt_from_outline(outline):
+def create_ppt_from_outline(outline, output_file="Generated_Slides.pptx"):
+    """
+    Create a PowerPoint presentation from the generated outline
+    
+    Parameters:
+    - outline: Generated presentation outline text
+    - output_file: Output PowerPoint file name
+    """
     prs = pptx.Presentation()
     slides = outline.split('---')
 
@@ -134,7 +176,25 @@ def create_ppt_from_outline(outline):
                     p.text = line
                     p.level = 0
 
-    prs.save('Generated_Slides.pptx')
+    prs.save(output_file)
+    print(f"PowerPoint presentation saved as '{output_file}'")
 
 # Create the PowerPoint presentation
-create_ppt_from_outline(formatted_outline)
+create_ppt_from_outline(formatted_outline, args.output)
+
+# Display usage instructions
+print("\n" + "="*80)
+print("PaperToSlides: Generate PowerPoint presentations from academic papers")
+print("="*80)
+print("\nUsage Examples:")
+print("  Basic usage:")
+print("    python GenerateSlidesOutline.py")
+print("\n  Specify a PDF file:")
+print("    python GenerateSlidesOutline.py --pdf path/to/your/paper.pdf")
+print("\n  Specify output filename:")
+print("    python GenerateSlidesOutline.py --output MyPresentation.pptx")
+print("\n  Combine options:")
+print("    python GenerateSlidesOutline.py --pdf path/to/paper.pdf --output MyPresentation.pptx")
+print("\nNote: Currently only the OpenAI model is implemented. To use other models,")
+print("you'll need to modify the code to include the appropriate API calls.")
+print("="*80)
